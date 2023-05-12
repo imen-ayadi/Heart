@@ -1,0 +1,427 @@
+---
+title: "Anal_Stat_project"
+author: "Imen Ayadi,Siwar Ben Helal,Sarra Fridhi,Mariem Zayani"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Importation et exploration des données R
+
+## Q1: importation du fichier heart  
+
+```{r}
+library("ggplot2")
+
+```
+
+
+
+```{r}
+db=read.table(file = file.choose(), header=TRUE,sep="\t",dec=".")
+
+```
+
+```{r}
+View(db)
+```
+
+
+## Q2 les noms des variables et leur types 
+```{r}
+colnames(db)
+
+```
+On observe que :
+-sexe,type_douleur,sucre,electro,vaisseau,angine et coeur sont de type qualitatif.
+-pic est de type quantitatif discret.
+-pression,cholester,taux_max,depression sont de type quantitatif continu 
+
+```{r}
+str(db)
+```
+On remarque que vaisseau,coeur,sexe,type_douleur,angine,sucre sont de type chr.
+Donc il faut les convertir en factor 
+
+```{r}
+for (i in c(2,3,6, 7, 9 ,12,13)){
+  db[,i]=as.factor(db[,i])
+  
+}
+```
+
+
+
+
+```{r}
+str(db)
+```
+
+# Q3 L'existance des variables manquantes
+```{r}
+#na.fail(db)
+sum(is.na(db))
+```
+
+
+
+On remarque qu' il n' y a pas des valeurs manquantes.
+
+# Etude des variables « electro et coeur»
+## modalités 
+```{r}
+mod_electro = levels(db$electro)
+mod_electro
+
+
+```
+```{r}
+effectif_electro=table(db$electro)
+effectif_electro
+```
+
+```{r}
+
+mod_coeur = levels(db$coeur)
+mod_coeur
+```
+
+```{r}
+effectif_coeur= table(db$coeur)
+effectif_coeur
+```
+# Q5.1: Frequence relative d' electro et coeur
+```{r}
+freq_rel_elec=prop.table(effectif_electro)
+freq_rel_elec
+```
+```{r}
+freq_rel_coeur=prop.table(effectif_coeur)
+freq_rel_coeur
+```
+## Q5.2 Representation graphique 
+On est dans le cas de 2 variables de type qualitatif donc on peut les représenter par un diagramme en batton et circulaire 
+
+```{r}
+tab3=table(db$coeur, db$electro)
+par(mfrow= c(1,2))
+pie(tab3, main = "Repartition du coeur en fonction \n de electro")
+barplot(tab3, legend = rownames(tab3),col =c('darkblue','lightblue'))
+```
+
+
+On remarque l'absence de la maladie au electro B:having abnormality, alors qu'il existe au niveau de A:normal et c:showing probable or definite left ventricular hypertrophy.
+
+# Q6 Étudier le croisement entre ces deux variables
+```{r}
+tab_cont1=table(db$coeur,db$electro)
+tab_cont1
+```
+Une seul personne a une abnomality et une seule personne a une abnomality mais non pas une maladie.
+
+
+## Q7 Croisement de deux variables qualitatif
+
+
+
+```{r}
+plot=mosaicplot(tab3,main = "Mosaicplot de deux variable qualitatif",col =c('lightblue','pink','darkblue'))
+
+```
+
+## Q8 On etudie deux variables qualitatif donc on va utiliser le test Khi-2
+
+```{r}
+chisq.test(tab3)
+
+```
+ p value<<<<<<<0.05 il existe une difference significative entre les deux variables coeur et electro.
+ Les deux variables sont dépendantes.
+ 
+# Etude des variables « age et cholesterol »
+## Q9 Les indicateurs statistiques
+
+```{r}
+mean(db$age)
+```
+la moyenne de la variable age 
+
+```{r}
+mean(db$cholester)
+
+```
+la moyenne de la variable cholesterol 
+
+```{r}
+median(db$age)
+
+```
+la median de la variable age
+```{r}
+median(db$cholester)
+```
+la median de la variable cholesterol
+
+```{r}
+quantile(db$age)
+```
+```{r}
+quantile(db$cholester)
+```
+```{r}
+min(db$age)
+```
+```{r}
+max(db$age)
+```
+```{r}
+min(db$cholester)
+```
+```{r}
+max(db$cholester)
+```
+# Q10 la dispersion de chaque variable
+```{r}
+Etendue_age=max(db$age)-min(db$age)
+Etendue_age
+```
+```{r}
+Etendue_chol=max(db$cholester)-min(db$cholester)
+Etendue_chol
+```
+```{r}
+sd_age=sd(db$age)
+sd_age
+```
+```{r}
+sd_chol=sd(db$cholester)
+sd_chol
+```
+
+```{r}
+cv_age=sd_age/mean(db$age)*100
+cv_age
+```
+ population homogene:
+ le coefficient de l'age est < 20% donc la population est homogene,non dispersée , concentreé  autour de la moyenne ainsi que la moyenne est representative de la population.
+ 
+```{r}
+cv_chol=sd_chol/mean(db$cholester)*100
+cv_chol
+```
+ population heterogene :
+ le coefficient de variation de cholesterol  est > 20% donc la population est heterogene,dispersée ,nest pas concentreé  autour de la moyenne ainsi que la moyenne n'est pas representative de la population.
+
+## Q11  la boite à moustaches
+
+```{r}
+par(mfrow = c(1,2))
+boxplot(db$cholester,main='Boite moustache de cholester', col = 'lightpink')
+boxplot(db$age,main='Boite moustache de l age',col = 'lightblue')
+
+```
+
+On constate que la moyenne de cholesterol est a peu prés 250.
+La plus part de l echantillon ont un taux de cholesterol moins de 300 mg/dl.
+L' age d'echantillon qui ont du cholesterol est entre 47 et 60.
+
+
+# Q12 Regroupement de la variable age par classes
+
+
+```{r}
+N=nrow(db)
+Nc=round(log(N+1,base=2))
+hist(db$age,breaks =Nc ,main = 'Repartition de l age par classe',col = 'lightblue', xlab = 'Age')
+
+```
+
+
+On remarque que la frequence est eleveé entre les gens d'age entre 50 et 60.
+
+## Q13 Effectif de chaque classe
+
+```{r}
+effectif_age=table(db$age)
+effectif_age
+```
+
+## Q14 explorer la relation entre ces variables
+```{r}
+cov(db[,1],db[,5])
+
+```
+Cov= 103>0 il ya une dépendance linéaire positive entre l age et le cholesterol . 
+
+```{r}
+cor(db[,1],db[,5])
+```
+coorelation=0.22<1 correlation positive faible. 
+
+# Nuage des points 
+
+le graphique nous montre une correlation faible entre l age et le cholesterol
+il suggére une relation linéairement faiblement croissante entre les deux variables 
+
+```{r}
+plot( x=db$age,y=db$cholester, main="Relation entre age et cholesterol", xlab = "Age", ylab = "Cholesterol", col='darkblue')
+```
+
+
+Il s'agit d'une faible correlation positive (lorsque l age augmente , le cholesterol augmente faiblement)
+
+## Q15
+
+
+```{r}
+scatter.smooth(x=db$age,y=db$cholester,main="Age en fonction de cholester",xlab = 'Age',ylab = 'Cholester' ,col='darkblue')
+
+```
+
+
+
+De point de vue visuelle , la tendance du nuage est lineaire.
+
+## Q16 Model Lineaire Simple du variable cholesterol en fonction de la variable age 
+
+```{r}
+model<- lm(cholester~age,data=db)
+model
+
+```
+
+
+## Q17 Resumé du model
+```{r}
+summary(model)
+```
+Adjusted R-squared= 0.04487<<<<< 1 donc ce n est pas un bon model explicatif . Il n' a pas un bon pouvoir explicatif
+Std. Error=18.6593 est  fort donc il s ' agit d 'un mauvais pouvoir predictif  
+
+## Q18  les coefficients de ce modèle
+```{r}
+coef(model)
+```
+```{r}
+beta0=coef(model)[1]
+beta0
+beta1=coef(model)[2]
+beta1
+```
+```{r}
+equation<-paste("cholester~",round(beta0,3),round(beta1,3),"*age")
+equation
+```
+
+## Q19 la ligne de ce modèle sur le graphique du nuage de points
+
+```{r}
+plot(y = db$cholester, x=db$age,
+     main="Relation entre cholesterol et age ",
+     xlab = "Age", 
+     ylab = "Cholesterol")
+abline(model,col=2,lwd=2)
+
+
+```
+  
+  Relation lineaire,positive .
+
+# Etude des variables « type_douleur et pression»
+
+## moyenne, mediane, quartiles, min, max et mode
+
+# Q20
+
+```{r}
+print('(moyenne, mediane, quartiles, min, max et mode) pour la variable pression')
+summary(db$pression)
+mode=which.max(db$pression)
+mode
+```
+
+
+# Q21 Representation graphique de la variable pression
+
+```{r}
+par(mfrow=c(1,2))
+N=nrow(db)
+Nc=round(log(N+1,base=2))
+hist(db$pression, main = 'Histogram de la pression',breaks = Nc, col = 'lightblue', ylab = 'Frequence' ,xlab = 'Pression', labels = FALSE,axes = TRUE,border = NULL)
+boxplot(db$pression,main='Representation graphique de la Pression',col='lightblue')
+
+```
+ 
+ 
+ On observe une fréquence importante de la variable pression entre 120 et 140.
+
+# Q22 la moyenne de la variable quantitative pression pour chaque groupe (modalité) de la variable type_douleur
+```{r}
+tapply(db$pression,db$type_douleur, mean)
+```
+Type douleur A(normal) a la plus grande pression.Type douleur B(having abnomality) a la plus faible pression
+
+# Q23  la representation graphique dune var qualitatif et une var quantitatif :box plot 
+```{r}
+boxplot(pression~type_douleur, data=db,col='skyblue')
+```
+
+# Q24 ANOVA TEST 
+```{r}
+anova_test<-aov(db$pression~db$type_douleur)
+summary(anova_test)
+```
+Pr>F donc on a ‘***’
+Il existe un effet trés significatif de la variable qualitative type_douleur sur la variable pression.Il y a une influence de type de douleur sur la pression,la pression change d'un type a un autre.
+
+# Modélisation linéaire de la variable « pression en fonction de la variable cholesterol »
+
+## Q25 
+
+```{r}
+ggplot(db)+aes(x=cholester,y=pression,color=cholester)+geom_point() +
+labs(title = "Représentation graphique de la pression \n en fonction de la variable cholester")+theme(
+  plot.title = element_text(hjust = 0.5, size = 14)
+)
+
+```
+
+
+Le graphique ne montre pas une relation lineaire.
+
+## Q26 Regression Lineaire de la pression en fonction de la variable cholester
+```{r}
+model2<- lm(pression~cholester,data=db)
+summary(model2)
+
+```
+## Q26 Evaluation de la qualité de la modélisation
+
+Adjusted R-squared:0.02632 <<<<< 1 donc ce n est pas un bon model explicatif . Il n' a pas un bon pouvoir explicatif.
+Std. Error:17.63  est fort donc il s ' agit d 'un mauvais pouvoir predictif.
+
+## Q27  Ajouter la ligne qui explicite  ce modèle 
+```{r}
+
+coef(model2)
+beta_zero=coef(model2)[1]
+beta_zero
+beta_1=coef(model2)[2]
+beta_1
+
+eq<-paste("pression~",round(beta_zero,3),round(beta_1,3),"*cholester")
+eq
+plot(y = db$pression, x=db$cholester,
+     main="relation entre cholester et pression \n",
+     xlab = "Pression", 
+     ylab = "Cholester",
+     col= 'blue')
+abline(model2,col=2,lwd=2)
+mtext(eq) 
+```
+
+pas de relation entre les deux variables.
